@@ -1,6 +1,6 @@
-## MMM-BMW
+## MMM-ShanghaiBus
 
-**Bugger My Weather**
+**Get Info for Shanghai Bus**
 
 ## Same church, different pew
 
@@ -26,26 +26,20 @@ doing it and I used what I learned in the module itself. Nothing monumental but 
 
 ## Installation and requirements
 
-* `git clone https://github.com/mykle1/MMM-BMW` into the `~/MagicMirror/modules` directory.
+* `git clone https://github.com/wxq8503/MMM-ShanghaiBus` into the `~/MagicMirror/modules` directory.
 
-* Free API key at `https://www.wunderground.com`
-
-* No dependencies needed! No kidding!
+request
 
 ## Config.js entry and options
 
     {
-		disabled: false,
-		module: "MMM-BMW",
-		position: "bottom_bar",               // bottom_bar or lower_third is best
+		module: 'MMM-ShanghaiBus',
+		position: 'top_center',
 		config: {
-			apiKey: "YOUR API KEY GOES HERE", // Free API key @ https://www.wunderground.com
-			tempUnits: "C",		              // C of F
-            	stateOrCountry: 'NY',             // US states abbr. or other country codes
-            	city: 'New_York',                 // City, eg. New_York (with underscore - no spaces)
-			useHeader: false,                 // true if you want a header                 
-			header: "Your header",
-			maxWidth: "100%",
+			router: "69",
+			direction: "1",
+			station: "4",
+			updateInterval: 30 * 1000           // 30 seconds
 		}
 	},
 	
@@ -53,5 +47,4 @@ doing it and I used what I learned in the module itself. Nothing monumental but 
 
 ## Country codes here (If you're not in the US)
 
-https://www.wunderground.com/weather/api/d/docs?d=resources/country-to-iso-matching&MR=1
 
