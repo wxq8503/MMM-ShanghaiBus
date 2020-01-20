@@ -35,7 +35,7 @@ Module.register("MMM-ShanghaiBus", {
 		if(this.busStatus === "等待发车"){
 			bus.innerHTML = "<span>等待发车</span>";
 		}else{
-			bus.innerHTML = "<span>" + this.terminal + "|还有"+ this.stopdis + "站，距离" + this.distance +"米,大约" + this.time + "s 后到达" +"</span>";
+			bus.innerHTML = "<span>" + this.station_num + " "+ this.station_name + "</span><span>" + this.terminal + "|还有"+ this.stopdis + "站，距离" + this.distance +"米,大约" + this.time + "s 后到达" +"</span>";
 		}
 		wrapper.appendChild(bus);
 		return wrapper;
@@ -49,6 +49,8 @@ Module.register("MMM-ShanghaiBus", {
 		this.distance = "N/A";
 		this.time = "N/A";
 		this.busStatus = "等待发车";
+		this.station_num = "N/A";
+		this.station_name = "N/A";
 		this.scheduleUpdate();
 		//this.sendSocketNotification('GET_BUS_STOP_INFO', {'routerNum':this.config.router+"路", 'routerDirection':this.config.direction, 'stopID':this.config.station});
 	},
@@ -89,6 +91,8 @@ Module.register("MMM-ShanghaiBus", {
 			this.distance = payload.distance;
 			this.time = payload.time;
 			this.busStatus = payload.status;
+			this.station_num = payload.station_num;
+			this.station_name = payload.station_name;
 			console.log('socketNotificationReceived() in main module..'+"<span>" + this.terminal + "|还有"+ this.stopdis + "站，距离" + this.distance +"米,大约" + this.time + "s 后到达" +"</span>");
             this.loaded = true;
             this.updateDom(1000);
