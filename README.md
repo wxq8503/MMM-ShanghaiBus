@@ -18,11 +18,9 @@ doing it and I used what I learned in the module itself. Nothing monumental but 
 
 ## Examples
 
-* lower_third position, under compliments
-![](images/11.png)
+* top_center
+![](images/demo.png)
 
-* bottom_bar position
-![](images/2.png)
 
 ## Installation and requirements
 
@@ -36,13 +34,14 @@ request
 		module: 'MMM-ShanghaiBus',
 		position: 'top_center',
 		config: {
-			router: "69",
+			routerName: "69路",
 			direction: "1",
-			station: "4",
-			updateInterval: 30 * 1000           // 30 seconds
+			checkStation: 4,
+			showStations: 4,
+			updateInterval: 300 * 1000           // 30 seconds
 		}
 	},
-	
+
 
 
 ## Country codes here (If you're not in the US)

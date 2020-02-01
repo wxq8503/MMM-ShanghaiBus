@@ -8,12 +8,151 @@
   color: yellow;               /* Header color. */
 }
 
-/*
+.busDirection{
+	padding-top: 2px;
+	}
+	
+.upgoing,.downgoing{ 
+	background: #fff; 
+	text-align: center; 
+	border-top: 1px solid #c8c7cc; 
+	border-bottom: 1px solid #c8c7cc;
+	border-left: 1px solid #c8c7cc;
+	border-right: 1px solid #c8c7cc;	
+	position: relative; 
+	padding:5px;
+	}
+.downgoing{ 
+	margin-top: -1px;
+	}
+	
+.cur{ 
+	background: no-repeat 7px center; /*url(images/traffic_okicon.png) */
+	background-size: 25px 25px; 
+	color:#fff;
+	border-radius: 5px; 
+	}
+	
+.time em{ 
+	font-style: normal; 
+	display: inline-block; 
+	padding-left: 25px; 
+	width: 70px;
+	}
+	
+.time em.s{ 
+	background: url(images/traffic_sicon.png) no-repeat left center; 
+	background-size:22px 22px;
+	text-align: left;
+	}
+	
+.time em.m{ 
+	background: url(images/traffic_micon.png) no-repeat left center; 
+	background-size:22px 22px;
+	text-align: left;
+	}
+	
+.stationBox{ 
+	margin-left: 5%; 
+	margin-right: 2%; 
+	border-left: 4px solid #bebec0; 
+	padding: 2px 0 2px 0; 
+	text-align: left;
+	max-width: 100%;
+	}
+.stationCon{ 
+	margin-left: -10px; 
+	padding-left: 30px; 
+	position: relative; 
+	margin-top: 10px;
+	}
+.stationList{ 
+	position: relative;
+	}
+span.arroeL{ 
+	position: absolute; 
+	z-index: 10; 
+	left: -9px; 
+	top: 12px; 
+	width: 10px; 
+	height: 15px; 
+	background: url(images/traffic_arr.png) no-repeat; 
+	background-size: 100%;
+	}
+.stationBor{ 
+	border: 1px solid #bababa; 
+	background: #000; 
+	border-radius: 5px; 
+	padding:0 10px;
+	}
+.station{ 
+	position: relative; 
+	padding: 6px 0;
+	}
+.icon{ 
+	position: absolute; 
+	z-index: 10; 
+	background: #ccc; 
+	right: 10px; 
+	top: 0.8em; 
+	width: 20px; 
+	height: 14px; 
+	background: url(images/traffic_down.png) no-repeat; 
+	background-size: 100%;
+	}
+span.point{ 
+	position: absolute; 
+	z-index: 10; 
+	width: 16px; 
+	height: 16px; 
+	display: inline-block; 
+	left: 0; 
+	top: 10px; 
+	background: url(images/traffic_point.png) no-repeat; 
+	background-size: 100%;
+	}
+.near{ 
+	padding: 5px 0; 
+	/*height:32px;
+	line-height:32px; */ 
+	border-top: 1px solid #ccc; 
+	display: none; 
+	font-size: 12px; 
+	background: url(images/traffic_shu.png) no-repeat 5px center; 
+	background-size: 20px; 
+	padding-left: 32px;
+	}
+.current{ color: #187cd7;}
+.current .icon{ 
+	background: url(images/traffic_up.png) no-repeat; 
+	background-size: 100%;
+	}
+.current span.point{ 
+	background: url(images/traffic_Cpoint.png) no-repeat; 
+	background-size: 100%;
+	}
+.current .near{ display: block;}
+
+span.have{ 
+	position: absolute; 
+	z-index:100; 
+	left:-7px; 
+	top: 70%; 
+	width: 28px; 
+	height: 28px;
+	}
+span.have.ok{ 
+	background: #000 url(images/traffic_busicon.png) no-repeat left center; 
+	background-size: 100%;
+	}
+
+		
+
 .MMM-ShanghaiBus .fcttext {
-  color: #62FF00;               /* text forecast color. Default is white. */
+  color: #FFF;               /* text forecast color. Default is white. */
 }
-/*
+
 .MMM-ShanghaiBus .daily {
-  color: #62FF00;               /* days color. Default is white. */
+  color: #FFF;               /* days color. Default is white. */
 }
 

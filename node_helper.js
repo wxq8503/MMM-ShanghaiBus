@@ -21,11 +21,11 @@ module.exports = NodeHelper.create({
 	socketNotificationReceived: function(notification, payload) {
 		var self=this;
 		console.log('Starting socketNotificationReceived()-'+notification);
+		console.log(notification + " -- " + payload.routerName);
 		if (notification === 'GET_BUS_SID') {
-			this.getSID(payload.routerNum);
+			this.getSID(payload.routerName);
 		} else if (notification === 'GET_BUS_STOP_INFO'){
-			console.log(notification + " -- " + payload.routerNum);
-			this.getSID(payload.routerNum, payload.routerDirection, payload.stopID);
+			this.getSID(payload.routerName, payload.routerDirection, payload.stopID);
 		}
 	},
 	
@@ -38,16 +38,16 @@ module.exports = NodeHelper.create({
 		var time = "N/A";
 		var status = "等待发车";
 		var stationsLength = stationsListData.length;
-		var stationInfo = stationsListData[Number(stopid)-1];
-		console.log(stationsListData);
-		console.log(stationInfo);
-		var station = JSON.parse(stationInfo);
-		
+		var json_stations = eval(stationsListData);
+		var stationInfo = json_stations[Number(stopid)-1];
+		//console.log(stationsListData);
 		console.info("Starting get all bus stations sid: " + sid);
+		console.log(stationInfo.station_num);
+		console.log(stationInfo.station_name);
 		console.log(stationsLength);
 		
 		var referer = 'https://shanghaicity.openservice.kankanews.com/public/bus/mes/sid/'+ sid +'?stoptype='+ direction;
-		console.info("Starting get all bus stations referer: " + referer);
+		//console.info("Starting get all bus stations referer: " + referer);
 		//var request = require("request");
 		var options = { 
 				method: 'POST',
@@ -78,7 +78,7 @@ module.exports = NodeHelper.create({
         //console.info("BusStopInfo 1--Starting get sid for bus sid: " + sid);
 		request(options, function (error, response, body) {
 			if (error) throw new Error(error);
-			//console.info("BusStopInfo 2--Starting get sid for bus sid: " + sid);
+			console.info("BusStopInfo 2--Starting get sid for bus sid: " + sid);
 			if (!error && response.statusCode == 200) {
 				console.log(body);
 				var obj = JSON.parse(body);
@@ -95,7 +95,8 @@ module.exports = NodeHelper.create({
 					console.log("距离：" + distance);
 					console.log("时间：" + time);
 				}
-				self.sendSocketNotification('RETURN_BUS_STOP_INFO', {'stopdis':stopdis, 'distance':distance, 'time':time, 'terminal':terminal, 'status':status, 'station_num':station_num, 'station_name':station_name, 'url':"test"});
+				var temp = {'routersid':sid, 'stopdis':stopdis, 'distance':distance, 'time':time, 'terminal':terminal, 'status':status, 'station_num':stationInfo.station_num, 'station_name':stationInfo.station_name, 'stationsListData':json_stations, 'url':"test"};
+				self.sendSocketNotification('RETURN_BUS_STOP_INFO', temp);
 			}else{
 				console.log(response.statusCode);
 				return "error";
@@ -106,9 +107,7 @@ module.exports = NodeHelper.create({
 	getBusStations: function(sid, direction, stopid, getBusStopInfo) {
         var self = this;
 		console.info("Starting get all bus stations: ");
-        
-		//var request = require("request");
-		//var sid = self.getSID(routerNum);
+       
 		var options = { 
 			method: 'GET',
 			url: 'http://shanghaicity.openservice.kankanews.com/public/bus/mes/sid/' + sid,
@@ -135,9 +134,9 @@ module.exports = NodeHelper.create({
 		request(options, function (error, response, body) {
 			
 			if (error) throw new Error(error);
-			console.log(response.headers['content-encoding']);
+			//console.log(response.headers['content-encoding']);
 			var header=response.headers;
-            console.log(`HEADERS: ${JSON.stringify(response.headers)}`);
+            //console.log(`HEADERS: ${JSON.stringify(response.headers)}`);
             //检查响应内容编码方式是否为“gzip”格式
             if(response.headers['content-encoding']=='gzip'){
 				//数据解压
@@ -147,10 +146,6 @@ module.exports = NodeHelper.create({
             } else {
 				self.getStationsList(body.toString(), sid, direction, stopid);
 			}
-			
-			//self.getBusStopInfo(sid, direction, stopid);
-			//self.sendSocketNotification('RETURN_BUS_STOP_INFO', {'stopdis':stopdis, 'distance':distance, 'time':time, 'terminal':terminal, 'status':status, 'url':"test"});
-			//self.sendSocketNotification('RETURN_BUS_STATIONS', {'sid':sid, 'url':"test"});
 		});
     },
 	
@@ -158,30 +153,47 @@ module.exports = NodeHelper.create({
 		var self = this;
 		//console.log(DezippedBody);
 		var $ = cheerio.load(DezippedBody);
-			var stationList = $('div .station');
-			console.log("stations_num:" + stationList.length);
-			var stationsListData = [];
-			stationList.each(function(item) {
-				var station = $(this);
-				var station_num = station.find('span.num').text();
-				var station_name = station.find('span.name').text();
-				console.log("station_num:" + station_num);
-				console.log("station_name:" + station_name);
-				stationsListData.push(
-					{
-						"station_num" : station_num,
-						"station_name" : station_name
-					}
-				);
-			});
+		var stationsListData = [];
+		
+		var stationFromTo = $('div .cur p');
+		var routerInfo_FromTo = stationFromTo.html();
+		console.log("routerInfo:" + routerInfo_FromTo);
+		var stationStartEnd = $('div .cur .time');
+		var routerInfo_StartEnd = stationStartEnd.html();
+		console.log("routerInfo:" + routerInfo_StartEnd);
+
+		stationsListData.push(
+			{
+				"routerInfo_FromTo" : routerInfo_FromTo,
+				"routerInfo_StartEnd" : routerInfo_StartEnd
+			}
+		);
+		
+		var stationList = $('div .station');
+		console.log("stations_num:" + stationList.length);
+		if(stopid>stationList.length ){
+			stopid = stationList.length;
+		}
+		stationList.each(function(item) {
+			var station = $(this);
+			var station_num = station.find('span.num').text();
+			var station_name = station.find('span.name').text();
+			//console.log("station_num:" + station_num);
+			//console.log("station_name:" + station_name);
+			stationsListData.push(
+				{
+					"station_num" : station_num,
+					"station_name" : station_name
+				}
+			);
+		});
 		self.getBusStopInfo(sid, direction, stopid, stationsListData);
 	},
 	
-	getSID:function(routerNum, direction, stopid, getBusStations) {
+	getSID:function(routerName, direction, stopid, getBusStations) {
 		var self = this;
 	  
-        console.info("getSID 1--Starting get sid for bus router: " + routerNum + " on stop " + stopid);
-        //var request = require("request");
+        console.info("getSID 1--Starting get sid for bus router: " + routerName + " on stop " + stopid);
 		var options = { 
 			method: 'POST',
 			url: 'https://shanghaicity.openservice.kankanews.com/public/bus/get',
@@ -198,23 +210,21 @@ module.exports = NodeHelper.create({
 				 'user-agent': 'Mozilla/5.0 (Linux; Android 9; BND-AL10 Build/HONORBND-AL10; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.126 MQQBrowser/6.2 TBS/044705 Mobile Safari/537.36 MMWEBID/8812 MicroMessenger/7.0.5.1440(0x27000537) Process/tools NetType/WIFI Language/en',
 				 'x-requested-with': 'XMLHttpRequest',
 				 'origin': 'https://shanghaicity.openservice.kankanews.com',
-				 'content-length': '17',
 				 'connection': 'keep-alive',
 				 'host': 'shanghaicity.openservice.kankanews.com' 
 			 },
 			form: {
-				idnum: routerNum 
+				idnum: routerName 
 				} 
 			};
-			//console.info("getSID 2--Starting get sid for bus router: " + routerNum);
+			console.info("getSID 2--Starting get sid for bus router: " + routerName);
 			request(options, function (error, response, body) {
 				if (error) throw new Error(error);
-				//console.info("getSID 3--Starting get sid for bus router: " + routerNum);
+				console.info("getSID 3--Starting get sid for bus router: " + routerName);
 				if (!error && response.statusCode == 200) {
-					console.log(body);
+					console.log("getSID return body: /n" + body);
 					var obj = JSON.parse(body);
 					var sid = obj.sid;
-					//self.getBusStopInfo(sid, direction, stopid);
 					self.getBusStations(sid, direction, stopid);
 				}else{
 					console.log(response.statusCode);
