@@ -33,6 +33,20 @@
 	border-radius: 5px; 
 	}
 	
+.error{ 
+	background: #000; 
+	text-align: center; 
+	color:red;
+	font-size: 15px; 
+	position: relative; 
+	border: 1px solid #c8c7cc;
+	border-radius: 5px; 
+	}
+
+.alert{ 
+	color:red;
+	}
+	
 .time em{ 
 	font-style: normal; 
 	display: inline-block; 
@@ -53,8 +67,8 @@
 	}
 	
 .stationBox{ 
-	margin-left: 5%; 
-	margin-right: 2%; 
+	margin-left: 3%; 
+	margin-right: 0%;
 	border-left: 4px solid #bebec0; 
 	padding: 2px 0 2px 0; 
 	text-align: left;
@@ -122,7 +136,8 @@ span.point{
 	background-size: 20px; 
 	padding-left: 32px;
 	}
-.current{ color: #187cd7;}
+.current{ color: #009900;}
+
 .current .icon{ 
 	background: url(images/traffic_up.png) no-repeat; 
 	background-size: 100%;

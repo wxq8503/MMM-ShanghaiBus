@@ -2,24 +2,16 @@
 
 **Get Info for Shanghai Bus**
 
-## Same church, different pew
+## Fetch information for the designed router
+用于获取公交车站的站点停靠信息，
+*All information fetched from below offical website:
+*所有的信息有来自于以下官网
+https://shanghaicity.openservice.kankanews.com/public/bus
 
-I wanted to take a new approach at a weather module. Until now, I had only done WWI and WWI2 but I
-wasn't really happy with those, although they were fun to do. This has a bit more style to it (not much)
-and it doesn't resemble other modules in format or appearance. I learned a couple of new things while
-doing it and I used what I learned in the module itself. Nothing monumental but very satisfying for me.
-
-## Good-bye bottom_bar or lower_thid
-
-* This was designed for use in the bottom_bar or lower_third position of your MagicMirror
-* My first real use of icons in a module, denoting the upcoming forecast
-* Weather forecast for day and night
-* Only the current weather is written out in words
-
-## Examples
+## Demo
 
 * top_center
-![](images/demo.png)
+![Demo](images/demo.png)
 
 
 ## Installation and requirements
@@ -34,16 +26,13 @@ request
 		module: 'MMM-ShanghaiBus',
 		position: 'top_center',
 		config: {
-			routerName: "69路",
-			direction: "1",
-			checkStation: 4,
-			showStations: 4,
-			updateInterval: 300 * 1000           // 30 seconds
+			routerName: "69路",			//公交车	
+			direction: "1",				//方向，0或者1，表示上行，下行
+			checkStation: 4,			//要查看的站点信息，
+			showStations: 3,			//要显示几个站点
+			updateInterval: 30 * 1000           // 30 seconds
 		}
 	},
 
-
-
-## Country codes here (If you're not in the US)
 
 

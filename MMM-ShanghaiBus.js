@@ -17,6 +17,7 @@ Module.register("MMM-ShanghaiBus", {
         animationSpeed: 2000,
         initialLoadDelay: 4250,
         retryDelay: 2500,
+		alertTime: 120,							// 当公交车到站时间小于此时间是发出通知
         updateInterval: 1 * 60 * 1000           // 1 minutes
 	},
 	
@@ -35,6 +36,13 @@ Module.register("MMM-ShanghaiBus", {
             return wrapper;
         }
 		
+		console.log("this.result_flag: " + this.checkSum + this.result_flag);
+		if (this.result_flag == "wrong_router_name") {
+            wrapper.innerHTML = "<span>Error catched, maybe wrong router name,</span><span>" + this.checkSum + "</span>";
+            wrapper.classList.add("error");
+            return wrapper;
+        }
+		
 		// Bus ID names and icons
         var busRouterInfo = document.createElement("div");
         busRouterInfo.classList.add("small", "bright", "daily", "busDirection");
@@ -46,8 +54,8 @@ Module.register("MMM-ShanghaiBus", {
 		*/
 		var routerInfo_FromTo = this.json_stations[0].routerInfo_FromTo;
 		var routerInfo_StartEnd = this.json_stations[0].routerInfo_StartEnd;
-		
-		//console.log(routerInfo_StartEnd);
+		console.log(routerInfo_FromTo);
+		console.log(routerInfo_StartEnd);
 		busRouterInfo.innerHTML = "<div class=\"upgoing cur \">\n" + routerInfo_FromTo + "\n<div class=\"time\"><em class=\"routername\">" + this.config.routerName + "</em>" + routerInfo_StartEnd + "</div>\n</div>";
 		
 		//busRouterInfo.innerHTML = "<div class=\"upgoing cur \">\n<span>" + from + "</span>→ <span>" + to + "</span>\n<div class=\"time\"><em class=\"s\">" + start + "</em><em class=\"m\">" + end + "</em></div>\n</div>"	
@@ -63,8 +71,14 @@ Module.register("MMM-ShanghaiBus", {
 		if(this.config.showStations > busStaionsCount){
 			this.config.showStations = busStaionsCount;
 		}
+		if(this.config.showStations < 1){
+			this.config.showStations = 1;
+		}
 		if(this.config.checkStation > busStaionsCount){
 			this.config.checkStation = busStaionsCount;
+		}
+		if(this.config.checkStation < 1){
+			this.config.checkStation = 1;
 		}
 		
 		if(busStaionsCount>1){
@@ -78,6 +92,12 @@ Module.register("MMM-ShanghaiBus", {
 			console.log("busStaionsCount: " + busStaionsCount);
 			console.log("ShowFrom: " + startStation);
 			console.log("ShowEnd: " + (stopStation-1));
+			
+			if(this.time < this.config.alertTime){
+				var addAlertClass = " alert";
+			}else{
+				var addAlertClass = "";
+			}
 			
 			for (var station of this.json_stations){
 				//console.log(station);
@@ -94,7 +114,7 @@ Module.register("MMM-ShanghaiBus", {
 				}
 				
 				if(i>startStation-1 && i< stopStation){
-					bus.innerHTML = bus.innerHTML + "<div class=\"stationCon " + current + "\">\n<span class=\"point\"></span>\n<div style=\"width:1px; height:1px; display:none\"></div>\n<div class=\"stationList\"><span class=\"arroeL\"></span>\n<div class=\"stationBor\">\n<div class=\"station\"><span class=\"num\">" + station.station_num + "</span><span class=\"name\">" + station.station_name + "</span>\n<div class=\"icon\"></div></div>\n<div class=\"near\">" + busStopInfo + "</div></div></div></div>\n";		
+					bus.innerHTML = bus.innerHTML + "<div class=\"stationCon " + current + "\">\n<span class=\"point\"></span>\n<div style=\"width:1px; height:1px; display:none\"></div>\n<div class=\"stationList\"><span class=\"arroeL\"></span>\n<div class=\"stationBor\">\n<div class=\"station\"><span class=\"num\">" + station.station_num + "</span><span class=\"name\">" + station.station_name + "</span>\n<div class=\"icon\"></div></div>\n<div class=\"near"+ addAlertClass + "\">" + busStopInfo + "</div></div></div></div>\n";		
 				}
 				i++;
 			}
@@ -119,7 +139,8 @@ Module.register("MMM-ShanghaiBus", {
 		this.json_stations = {};
 		this.scheduleUpdate();
 		this.routersid = '';
-		//this.sendSocketNotification('GET_BUS_STOP_INFO', {'routerName':this.config.routerName, 'routerDirection':this.config.direction, 'stopID':this.config.checkStation});
+		this.result_flag = "error";
+		this.checkSum = this.config.routerName + '|' + this.config.direction + '|' + this.config.checkStation;
 	},
 	
 	processBus: function(data) {
@@ -149,12 +170,13 @@ Module.register("MMM-ShanghaiBus", {
 			this.processBus(payload);
 			Log.info('received RETURN_BUS_STATIONS');
 			this.updateDom(this.config.animationSpeed);
-		} else if (notification === "RETURN_BUS_STOP_INFO"){
+		} else if (notification === "RETURN_BUS_STOP_INFO"  && payload.checkSum === this.checkSum){
 			this.processBus(payload);
 			Log.info('received RETURN_BUS_STOP_INFO');
 			
 			this.routersid = payload.routersid;
 			Log.info("this.routersid: " + this.routersid);
+			this.result_flag = payload.result_flag;
 			this.terminal = payload.terminal;
 			this.stopdis = payload.stopdis;
 			this.distance = payload.distance;
