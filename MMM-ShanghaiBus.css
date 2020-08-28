@@ -67,22 +67,27 @@
 	}
 	
 .stationBox{ 
-	margin-left: 3%; 
+	margin-left: 2%; 
 	margin-right: 0%;
+	margin-bottom: 10px;
 	border-left: 4px solid #bebec0; 
-	padding: 2px 0 2px 0; 
+	border-bottom: 2px solid #bebec0;
+	padding: 2px 0 10px 0; 
 	text-align: left;
 	max-width: 100%;
 	}
+
 .stationCon{ 
 	margin-left: -10px; 
 	padding-left: 30px; 
 	position: relative; 
-	margin-top: 10px;
+	margin-top: 5px;
 	}
+	
 .stationList{ 
 	position: relative;
 	}
+	
 span.arroeL{ 
 	position: absolute; 
 	z-index: 10; 
@@ -101,16 +106,16 @@ span.arroeL{
 	}
 .station{ 
 	position: relative; 
-	padding: 6px 0;
+	padding: 2px 0;
 	}
 .icon{ 
 	position: absolute; 
 	z-index: 10; 
 	background: #ccc; 
 	right: 10px; 
-	top: 0.8em; 
+	top: 0.5em; 
 	width: 20px; 
-	height: 14px; 
+	height: 12px; 
 	background: url(images/traffic_down.png) no-repeat; 
 	background-size: 100%;
 	}
@@ -126,9 +131,7 @@ span.point{
 	background-size: 100%;
 	}
 .near{ 
-	padding: 5px 0; 
-	/*height:32px;
-	line-height:32px; */ 
+	padding: 2px 0; 
 	border-top: 1px solid #ccc; 
 	display: none; 
 	font-size: 12px; 

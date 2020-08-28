@@ -10,26 +10,57 @@ var request = require('request');
 var cheerio = require('cheerio');
 var iconv = require('iconv-lite');
 const zlib = require('zlib');
+var routerItems = [];
+var routerItemCount = 1;
 
 module.exports = NodeHelper.create({
+	
 	start: function () {
 		console.info('MMM-ShanghaiBus helper started...');
+		routerItems = [];
 	},
-
+	
 
   // Override socketNotificationReceived method.
 	socketNotificationReceived: function(notification, payload) {
 		var self=this;
-		console.log('Starting socketNotificationReceived()-'+notification);
-		console.log(notification + " -- " + payload.routerName);
+		routerItems = [];
+		console.log(this.name + ' Starting socketNotificationReceived()-'+notification);
 		if (notification === 'GET_BUS_SID') {
 			this.getSID(payload.routerName);
 		} else if (notification === 'GET_BUS_STOP_INFO'){
-			this.getSID(payload.routerName, payload.routerDirection, payload.stopID);
+			//this.getSID(payload.routerName, payload.routerDirection, payload.stopID, getBusStations);
+			//console.log("Hello world 1--" + payload);
+			routerItemCount = payload.routers.length;
+			console.log("Hello world Item Count: --" + routerItemCount);
+			self.fetchRouters(payload.routers);
 		}
 	},
 	
-	getBusStopInfo: function(sid, direction, stopid, checkSum, stationsListData) {
+	sendback: function(){
+		var self = this;
+		console.log("Hello world 4--" + routerItems);
+		self.sendSocketNotification('RETURN_BUS_STOP_INFO', {'returnResult': routerItems});
+	},
+	
+	fetchRouters: function(routers, callback){
+		var self = this;
+		routerItems = [];
+		for (var router in routers) {
+			//console.log("Hello world 2--" + router);
+			var routerItem = routers[router];
+			this.getSID(routerItem.routerName.replace(/ /g,""), routerItem.direction, routerItem.checkStation, routerItem.showStations);
+			//routerItems.push(this.getSID(routerItem.routerName.replace(/ /g,""), routerItem.direction, routerItem.checkStation, routerItem.showStations));
+			//console.log("Hello world 3--" + routerItems);
+			//console.log("Hello world 3-length--" + routerItems.length);
+			//this.getSID(routerItem.routerName.replace(/ /g,""), routerItem.direction, routerItem.checkStation, routerItem.showStations);
+		}
+		//console.log("Hello world 3-length--" + routerItems.length);
+
+		//self.sendSocketNotification('RETURN_BUS_STOP_INFO', {'returnResult': routerItems});
+	},
+	
+	getBusStopInfo: function(routerName, sid, direction, stopid, checkSum, stationsListData, checkstationIndex) {
         var self = this;
 		
 		var terminal = "N/A";
@@ -39,23 +70,33 @@ module.exports = NodeHelper.create({
 		var status = "等待发车";
 		var stationsLength = stationsListData.length;
 		var json_stations = eval(stationsListData);
-		var stationInfo = json_stations[Number(stopid)-1];
+		//var stationInfo = json_stations[Number(stopid)];
+		var stationInfo = json_stations[Number(checkstationIndex)];
 		var result_flag = 'error';
 		
 		console.log(checkSum + "--" + stationsListData);
 		console.log("Starting get all bus stations sid: " + checkSum + "--" + sid);
-		console.log("Stations numbers: " + checkSum + "--" + stationsLength);
+		console.log("Stations numbers: " + stationsLength + "--" + checkSum);
 		
+		var now=new Date();
+		var hours=now.getHours();//>9?now.getHours() :"0"+now.getHours();;
+		var minutes=now.getMinutes();//>9?now.getMinutes() :"0"+now.getMinutes();
+		var seconds=now.getSeconds();//>9?now.getSeconds() :"0"+now.getSeconds();
+		
+		if(hours < 10) hours = "0" + hours;
+        if(minutes < 10) minutes = '0' + minutes; 
+        if(seconds < 10) seconds = '0' + seconds; 
+		
+		var updatetime = "<div class=\"station--\"><span class=\"num\">上次更新时间：</span><span class=\"name\">" + hours + ":" + minutes + ":" + seconds + "</span>\n</div>"
 		if(stationsLength == 1){
-			var temp = {'result_flag':"wrong_router_name", 'routersid':sid, 'stopdis':stopdis, 'distance':distance, 'time':time, 'terminal':terminal, 'status':status, 'station_num':0, 'station_name':"N/A", 'stationsListData':json_stations, 'checkSum':checkSum};
-			self.sendSocketNotification('RETURN_BUS_STOP_INFO', temp);
-			return "";
+			var temp = {'result_flag':"wrong_router_name", 'routerName':routerName,  'routersid':sid, 'stopdis':stopdis, 'distance':distance, 'time':time, 'terminal':terminal, 'status':status, 'station_num':0, 'station_name':"N/A", 'stationsListData':json_stations, 'checkSum':checkSum, 'checkstationIndex': checkstationIndex, 'updatetime':updatetime};
+			//self.sendSocketNotification('RETURN_BUS_STOP_INFO', temp);
+			routerItems.push(temp);
+			return null;
+			return temp;
 		}
 		
-		
-		console.log(stationInfo.station_num);
-		console.log(stationInfo.station_name);
-		
+		console.log(checkSum + "--站点：" + stationInfo.station_num + "--" + stationInfo.station_name);
 		
 		var referer = 'https://shanghaicity.openservice.kankanews.com/public/bus/mes/sid/'+ sid +'?stoptype='+ direction;
 		var options = { 
@@ -108,14 +149,26 @@ module.exports = NodeHelper.create({
 			}else{
 				console.log(response.statusCode);
 			}
-			var temp = {'result_flag':result_flag, 'routersid':sid, 'stopdis':stopdis, 'distance':distance, 'time':time, 'terminal':terminal, 'status':status, 'station_num':stationInfo.station_num, 'station_name':stationInfo.station_name, 'stationsListData':json_stations, 'checkSum':checkSum};
-			self.sendSocketNotification('RETURN_BUS_STOP_INFO', temp);
+			var temp = {'result_flag':result_flag, 'routerName':routerName,  'routersid':sid, 'stopdis':stopdis, 'distance':distance, 'time':time, 'terminal':terminal, 'status':status, 'station_num':stationInfo.station_num, 'station_name':stationInfo.station_name, 'stationsListData':json_stations, 'checkSum':checkSum, 'checkstationIndex': checkstationIndex, 'updatetime':updatetime};
+			//console.log(temp);
+			routerItems.push(temp);
+			console.log("getBusStopInfo: " + routerItems.length);
+			console.log("getBusStopInfo: " + routerItems);
+			
+			if(routerItemCount === routerItems.length){
+				//console.log("Hello world 3--" + routerItems);
+				self.sendSocketNotification('RETURN_BUS_STOP_INFO', {'returnResult': routerItems});
+			}
+		
+			return null;
+			return temp;
+			//self.sendSocketNotification('RETURN_BUS_STOP_INFO', temp);
 		});
     },
 	
-	getBusStations: function(sid, direction, stopid, checkSum, getBusStopInfo) {
+	getBusStations: function(routerName, sid, direction, stopid, checkSum, showStations){//, getStationsList) {
         var self = this;
-		console.info("Starting get all bus stations: ");
+		console.info("Starting get all bus stations of : " + routerName);
        
 		var options = { 
 			method: 'GET',
@@ -150,15 +203,16 @@ module.exports = NodeHelper.create({
             if(response.headers['content-encoding']=='gzip'){
 				//数据解压
                 zlib.unzip(body, function(err, dezipped) {
-					self.getStationsList(dezipped.toString(), sid, direction, stopid, checkSum);
+					self.getStationsList(dezipped.toString(), routerName, sid, direction, stopid, checkSum, showStations);
                 });
             } else {
-				self.getStationsList(body.toString(), sid, direction, stopid, checkSum);
+				self.getStationsList(body.toString(), routerName, sid, direction, stopid, checkSum, showStations);
 			}
+			
 		});
     },
 	
-	getStationsList:function(DezippedBody, sid, direction, stopid, checkSum, getBusStopInfo){
+	getStationsList:function(DezippedBody, routerName, sid, direction, stopid, checkSum, showStations){
 		var self = this;
 		//console.log(DezippedBody);
 		var $ = cheerio.load(DezippedBody);
@@ -179,30 +233,58 @@ module.exports = NodeHelper.create({
 		);
 		
 		var stationList = $('div .station');
-		console.log("stations_num:" + checkSum + "--" + stationList.length);
-		if(stopid > stationList.length ){
-			stopid = stationList.length;
+		var stationsCount = stationList.length;
+		
+		console.log("stations_num:" + checkSum + "--" + stationsCount);
+		if(stopid > stationsCount ){
+			stopid = stationsCount;
 		}
 		if(stopid < 1 ){
 			stopid = 1;
 		}
+		
+		if(showStations > stationsCount ){
+			showStations = stationsCount;
+		}
+		var startStation = stopid-Math.floor(showStations/2);
+		if(startStation<1){
+			startStation = 1;
+		}
+		var stopStation = startStation + showStations - 1;
+		if(stopStation > stationsCount ){
+			stopStation = stationsCount;
+		}
+		
+		console.log("station_start:" + startStation);
+		console.log("station_stop:" + stopStation);
+		var i = 1;
+		var checkstationIndex = 1;
 		stationList.each(function(item) {
 			var station = $(this);
 			var station_num = station.find('span.num').text();
 			var station_name = station.find('span.name').text();
-			//console.log("station_num:" + station_num);
-			//console.log("station_name:" + station_name);
-			stationsListData.push(
-				{
-					"station_num" : station_num,
-					"station_name" : station_name
+			if(Number(station_num) >= startStation && Number(station_num) <= stopStation){
+				if(Number(station_num) === stopid){
+					checkstationIndex = i;
 				}
-			);
+				stationsListData.push(
+					{
+						"station_num" : station_num,
+						"station_name" : station_name
+					}
+				);
+				i++;
+				console.log("station_num:" + station_num);
+				console.log("station_name:" + station_name);
+			}
+
 		});
-		self.getBusStopInfo(sid, direction, stopid, checkSum, stationsListData);
+		
+		self.getBusStopInfo(routerName, sid, direction, stopid, checkSum, stationsListData, checkstationIndex);
 	},
 	
-	getSID:function(routerName, direction, stopid, getBusStations) {
+	
+	getSID:function(routerName, direction, stopid, showStations) {
 		var self = this;
 		var checkSum = routerName + '|' + direction + '|' + stopid;
 		console.log('checkSum:' + checkSum);
@@ -230,15 +312,15 @@ module.exports = NodeHelper.create({
 				idnum: routerName 
 				} 
 			};
-			console.info("getSID 2--Starting get sid for bus router: " + routerName);
+			console.info("getSID 2--Starting get sid for bus router: " + routerName + " on stop " + stopid);
 			request(options, function (error, response, body) {
 				if (error) throw new Error(error);
-				console.info("getSID 3--Starting get sid for bus router: " + routerName);
+				console.info("getSID 3--Starting get sid for bus router: " + routerName + " on stop " + stopid);
 				if (!error && response.statusCode == 200) {
 					console.log("getSID return body:" + body);
 					var obj = JSON.parse(body);
 					var sid = obj.sid;
-					self.getBusStations(sid, direction, stopid, checkSum);
+					self.getBusStations(routerName, sid, direction, stopid, checkSum, showStations);
 				}else{
 					console.log(response.statusCode);
 					return "error";
